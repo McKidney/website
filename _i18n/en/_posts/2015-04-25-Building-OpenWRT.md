@@ -5,13 +5,13 @@ author: "McKidney"
 date: 2015-04-25 20:00:00
 ---
 #### What is this about?
-Freifunk Firmware is distributed via <em>firmware image</em> files - usually. It’s plug and play for the user: Fire up a browser, open your router’s WebUI, upload a it and you’re done. But how to create theses images? Is there room for tinkering?
+Freifunk Firmware is distributed via firmware image files - usually. It's plug and play for the user: Fire up a browser, open your router's WebUI, upload a it and you're done. But how to create theses images? Is there room for tinkering?
 
-Usually, every Freifunk-Firmware uses OpenWRT/Linux. That’s the big common ground for all networks out there. 
-OpenWRT is a special Linux distribution focusing on wifi routers - but out-of-the stock releases builds cannot be used, 'cause every community must ship their network configuration. This blog post explains how to create these deliverable. It provides a detailed view on <a href="http://wiki.openwrt.org/doc/howto/obtain.firmware">http://wiki.openwrt.org/doc/howto/obtain.firmware</a> while having Freifunk in mind.
+Usually, every Freifunk-Firmware uses OpenWRT / Linux. Thats the big common ground for all networks out there. 
+OpenWRT is a specialized Linux distribution focusing on wifi routers - but out-of-the stock releases builds cannot be used, 'cause every community must ship their network configuration. This blog post explains how to create custom firmware images. It provides a detailed view on http://wiki.openwrt.org/doc/howto/obtain.firmware while having Freifunk in mind.
 
 ####Make It - The Buildroot
-OpenWRT features a build system (aka <em>Buildroot</em> - <a target="_blank" href="http://wiki.openwrt.org/doc/howto/build">http://wiki.openwrt.org/doc/howto/build</a>). It is used to build OpenWRT from source. I use it like this:
+OpenWRT features a build system (aka Buildroot - http://wiki.openwrt.org/doc/howto/build). It is used to build OpenWRT from source, completely. I use it like this:
 {% highlight bash %}
 $ git clone git://git.openwrt.org/openwrt.git 			
 $ cd openwrt 											
@@ -19,7 +19,7 @@ $ scripts/feeds update -a && scripts/feeds install -a
 $ make menuconfig  # Select all options you need
 $ make clean install								
 {% endhighlight %}
-Afterwards, firmware images will appear in <code>./bin/</code> - Keep calm and carry one:
+Afterwards, firmware images will be in <code>./bin/</code> - Keep calm and carry one:
 
 - If it fails, try again using <code>make V=99</code>. 
 - To speed up, use more cores: <code>make -j 8</code>.There'll be dragons.
@@ -68,7 +68,7 @@ Looking into <code>./ar71xx/packages/base</code>, there's a complete <a href="ht
 
 #####Image Builder
 
-The Image Builder is for creating firmware images to be uploaded on routers. Sometimes it's called <em>Image Generator</em>. It's for <em>post-processing</em> a Buildroot-output - such as an OpenWRT stock release. You can select packages and files to be included. Creating a minimal image including the previous olsr v2 build for a TP-Link WR841n works like this:
+The Image Builder is for creating firmware images to be uploaded on routers. Sometimes it's called Image Generator. It's for post-processing a Buildroot-output - such as an OpenWRT stock release. You can select packages and files to be included. Creating a minimal image including the previous olsr v2 build for a TP-Link WR841n works like this:
 {% highlight bash %}
 $ wget https://downloads.openwrt.org/barrier_breaker/14.07/ar71xx/generic/OpenWrt-ImageBuilder-ar71xx_generic-for-linux-x86_64.tar.bz2
 $ tar xjf OpenWrt-ImageBuilder-ar71xx_generic-for-linux-x86_64.tar.bz2
@@ -80,24 +80,25 @@ Result is: <code>./bin/ar71xx/openwrt-ar71xx-generic-tl-wr841n*</code>. Keep in 
 
 #### Summary
 OpenWRT's build system appears redundant. Both SDK and Image Builder do serve their purpose and have justified use cases.
-For generating Freifunk-Firmware, SDK + Imagebuilder seem to be a reasonable choice: Software packages released by OpenWRT can be used and post-processing allows including USB-drivers only for models having USB. Building a non-released version of OpenWRT (trunk, stable branch) seems to be one of the few cases, where you acutally need the Buildroot. 
+For generating Freifunk-Firmware, SDK + Imagebuilder seem to be a reasonable choice: Software packages released by OpenWRT can be used and post-processing allows including USB-drivers only for models having USB. Building a non-released version of OpenWRT (trunk, stable branch) seems to be one of the few cases, where you actually need the Buildroot. 
 
-|                                                                     | Buildroot     | SDK            | Image Builder         |
+|  Feature                                                            | Buildroot     | SDK            | Image Builder         |
 | --------------------------------------------------------------------|:-------------:|:--------------:|:---------------------:|
-| Purpose  	                                                          | Do everthing  | Build packages | Create firmware files |
-| Turnaround-Time                                                     | Slow          | Fast           | Fast                  |
-| Build-Stability                                                     | Instable      | Stable         | Stable                |
-| Space needed for building - Freifunk szenario                       | 9647 MB       | 398 MB         | 402 MB                |
-| Use unreleased (patched) versions of OpenWRT                        | Yes           | No             | No                    |
-| Build 3rd party software                                            | Yes           | Yes            | No                    |
-| Build 3rd party kernel modules for OpenWRT stock releases           | No            | Yes            | No                    |
-| Create opkg-feed directories                                        | Yes           | Yes            | No                    |
-| Create Firmware Binaries (.bin / .trx)                              | Yes           | No             | Yes                   |
-| Post-process buils according to target devices (ie add USB-drivers) | No            | No             | Yes                   |
-| Re-pack KBU-firmware releases for other communities                 | No            | No             | Yes                   |
+| Purpose  	                                                          | Do everything | Build packages | Create firmware files |
+| Turnaround time                                                     | Slow          | Fast           | Fast                  |
+| Build stability                                                     | Unstable      | Stable         | Stable                |
+| Space needed for building - Freifunk scenario                       | 9647 MB       | 398 MB         | 402 MB                |
+| Use unreleased (patched) versions of OpenWRT's core packages        | ✔             | ❌              | ❌                     |
+| Build 3rd party software                                            | ✔ 		      | ✔              | ❌                     |
+| Build 3rd party kernel modules for OpenWRT stock releases           | ❌             | ✔              | ❌                     |
+| Create opkg-feed directories                                        | ✔             | ✔              | ❌                     |
+| Create firmware image files (.bin / .trx)                           | ✔             | ❌              | ✔                     |
+| Post-process builds according to target devices (ie add USB-drivers)| ❌             | ❌              | ✔                     |
+| Re-pack (KBU-)firmware releases for other communities               | ❌             | ❌              | ✔                     |
 
 
-Next time, I'll explain how Freifunk-KBU is doing their release builds - but this is a different story. In the meantime: try to build your community's firmware by yourserlf. Create fastd and batman-adv packages using the SDK or create firmware image files including USB-Support for your router.
+
+One of the next posts will be on doing release builds for KBU - but this is a different story. In the meantime: try to build your community's firmware by yourself.
 
 That's it - Happy Hacking.
 
